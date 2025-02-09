@@ -19,3 +19,19 @@ body {
   background: var(--background);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+
+::-webkit-scrollbar {
+  display: none;
+}
+
+/* Hide scrollbar for Firefox */
+* {
+  scrollbar-width: none;
+}
+
+/* Prevent content shifting when scrollbar is hidden */
+html, body {
+  overflow: -moz-scrollbars-none;
+  -ms-overflow-style: none; /* Hide scrollbar in Internet Explorer */
+}
