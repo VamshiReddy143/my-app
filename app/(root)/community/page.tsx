@@ -26,52 +26,12 @@ const CommunitiesPage = () => {
 
   if (loading) return <div>Loading...</div>;
 
-  console.log("✅ Passing to RightSidebar:", communities); // Debugging Log
+  
 
   return (
-    <div >
-  
-      {/* <div className="flex-1 p-4">
-        <h1 className="text-3xl font-bold mb-6">Communities</h1>
-        {communities.length > 0 ? (
-          <div className="space-y-6">
-            {communities.map((community) => (
-              <div key={community._id} className="border p-4 rounded-lg flex gap-4">
-               
-                <div>
-                  <Image
-                    src={community.image || "/default-avatar.png"}
-                    alt={community.name}
-                    width={80}
-                    height={80}
-                    className="rounded-full object-cover"
-                  />
-                </div>
-
-                <div className="flex-grow">
-                  <Link href={`/community/${community._id}`}>
-                    <h2 className="text-xl font-semibold hover:underline cursor-pointer">
-                      {community.name}
-                    </h2>
-                  </Link>
-                  <p className="text-gray-600">{community.description}</p>
-                  <p className="text-sm text-gray-500">
-                    Members: {community.members?.length || 0}
-                  </p>
-                </div>
-
-                <div>
-                  <JoinCommunityButton />
-
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <p>No communities available.</p>
-        )}
-      </div> */}
-      <CreatePost communities={communities}/> 
+    <div className="mt-[5em]" >
+ 
+      <CreatePost communities={communities}  postType="community"/> 
     </div>
   );
 };

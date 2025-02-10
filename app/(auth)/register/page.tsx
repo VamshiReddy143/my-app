@@ -6,6 +6,7 @@ import axios from "axios";
 import { useForm, SubmitHandler } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
+import Image from "next/image";
 
 const registerSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
@@ -57,11 +58,17 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center h-screen">
-      <h1 className="text-4xl font-bold mb-4">gratafy</h1>
+    <div style={{
+      backgroundImage: "url('/background.jpg')", width: "100%",
+      backgroundSize: "cover",
+      backgroundPosition: "center",
+      backgroundRepeat: "no-repeat",
+    }} className="flex flex-col items-center  justify-center h-screen">
+      <h1 className="text-4xl font-bold mb-4 ">SIGN UP</h1>
 
       <form
-        className="flex flex-col items-center bg-gray-800 p-10 gap-3 rounded-xl shadow-lg"
+        className="flex flex-col items-center p-10 gap-3 rounded-xl shadow-lg
+                   bg-white/20 backdrop-blur-md border border-white/30"
         onSubmit={handleSubmit(onSubmit)}
       >
         {/* Name Field */}
@@ -105,18 +112,26 @@ export default function RegisterPage() {
 
         {/* Google Sign-In Button */}
         <button
-          type="button"
-          onClick={handleGoogleSignIn}
-          className="bg-white py-2 px-4 rounded-xl mt-4 text-black hover:bg-gray-200 transition"
-        >
-          Sign in with Google
-        </button>
+  type="button"
+  onClick={handleGoogleSignIn}
+  className="bg-white flex items-center gap-3 py-2 px-4 rounded-xl mt-4 text-black  transition"
+>
+  <Image
+    src="/google.png"
+    alt="Google Logo"
+    width={20} // Adjust size to fit well
+    height={20}
+    className="h-6 w-6" // Ensures proper scaling
+  />
+  Sign in with Google
+</button>
+
       </form>
 
       {/* Login Redirect */}
-      <div className="flex mt-2 gap-2">
+      <div className="flex mt-5 gap-2">
         <p className="text-white">Already have an account?</p>
-        <button onClick={() => router.push("/login")} className="text-violet-600">
+        <button onClick={() => router.push("/login")} className="text-[#bc9fdf]">
           Login
         </button>
       </div>

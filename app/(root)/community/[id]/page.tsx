@@ -5,6 +5,9 @@ import Link from "next/link";
 import { useSession } from "next-auth/react";
 import { useUserId } from "@/hooks/useUserId";
 import { useDeletePost } from '@/components/PostActions';
+import Loading from "@/components/loading";
+
+
 
 
 
@@ -40,6 +43,7 @@ const CommunityDetails = ({ params }: { params: Promise<{ id: string }> }) => {
   const [joined,setJoined] = useState(false);
   const [openComments, setOpenComments] = useState<{ [key: string]: boolean }>({});
 
+
   const userId = useUserId();
    const deletePost = useDeletePost()
 
@@ -51,7 +55,7 @@ const CommunityDetails = ({ params }: { params: Promise<{ id: string }> }) => {
   };
 
 
-  const getTimeAgo = (timestamp) => {
+  const getTimeAgo = (timestamp:number) => {
     const diffMs = Date.now() - new Date(timestamp).getTime();
     const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
   
@@ -63,13 +67,14 @@ const CommunityDetails = ({ params }: { params: Promise<{ id: string }> }) => {
   // Define all Hooks at the top level
 
   const handlePostAction = useCallback(async (postId: string, action: "like" | "dislike") => {
-    if (status === "loading" || !session?.user?.id) return alert("You must be logged in.");
+    if (status === "loading" || !userId) return alert("You must be logged in.");
 
     try {
       const response = await fetch(`/api/posts/${postId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId: session.user.id, action }),
+        // body: JSON.stringify({ userId: session?.user.id, action }),
+        body: JSON.stringify({ userId, action }),
       });
 
       if (!response.ok) {
@@ -86,7 +91,7 @@ const CommunityDetails = ({ params }: { params: Promise<{ id: string }> }) => {
     } catch (error) {
       console.error(error);
     }
-  }, [session, status]);
+  }, [status,userId]);
 
   const handleSharePost = useCallback(async (postId: string) => {
     const postUrl = `${window.location.origin}/posts/${postId}`;
@@ -100,26 +105,27 @@ const CommunityDetails = ({ params }: { params: Promise<{ id: string }> }) => {
   }, []);
 
   const handleComment = useCallback(async (postId: string, content: string) => {
-    if (status === "loading" || !session?.user) return alert("You must be logged in.");
+    if (status === "loading" || !userId) return alert("You must be logged in.");
     if (!postId) return alert("Post ID is missing!");
   
     try {
       const response = await fetch(`/api/posts/${postId}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId: session.user.id, content }),
+        // body: JSON.stringify({ userId: session.user.id, content }),
+        body: JSON.stringify({ userId, content }),
       });
   
       const data = await response.json();
       if (!response.ok) throw new Error(data.message || "Failed to add comment.");
   
-      // ✅ Update comments in both `Home` and `CommunityDetails`
+    
       setPosts((prevPosts) =>
         prevPosts.map((post) =>
           post._id === postId
             ? {
                 ...post,
-                comments: [...post.comments, data.comment], // ✅ Ensure correct data format
+                comments: [...post.comments, data.comment],
               }
             : post
         )
@@ -128,7 +134,7 @@ const CommunityDetails = ({ params }: { params: Promise<{ id: string }> }) => {
       console.error(error);
       alert("Failed to add comment.");
     }
-  }, [session, status]);
+  }, [userId, status]);
   
 
 
@@ -141,7 +147,7 @@ const CommunityDetails = ({ params }: { params: Promise<{ id: string }> }) => {
           if (response.ok) {
             setCommunity(data.community);
             setPosts(data.posts); // ✅ Posts will now have populated comments
-            setJoined(data.community.members.some((member: any) => member._id === session?.user?.id));
+            setJoined(data.community.members.some((member: any) => member._id === userId));
           }
         } catch (error) {
           console.error(error);
@@ -151,7 +157,7 @@ const CommunityDetails = ({ params }: { params: Promise<{ id: string }> }) => {
       };
     
       fetchCommunityDetails();
-    }, [id, session]);
+    }, [id, session,userId]);
     
   
 
@@ -181,16 +187,18 @@ const CommunityDetails = ({ params }: { params: Promise<{ id: string }> }) => {
         });
       }
     } catch (error) {
-      console.error("❌ Error joining/leaving community:", error);
+      console.error(" Error joining/leaving community:", error);
     }
   };
   
 
-  if (loading) return <div>Loading...</div>;
+  if (loading) return <div>
+    <Loading/>
+  </div>;
   if (!community) return <div>Community not found</div>;
 
   return (
-    <div className="w-full sm:pr-[20em]">
+    <div className="w-full mt-[5em] sm:pr-[20em]">
       <div className="flex items-center gap-5">
         {community.image && (
           <Image
@@ -235,7 +243,7 @@ const CommunityDetails = ({ params }: { params: Promise<{ id: string }> }) => {
   {community.members?.slice(0, 5).map((member, index) => ( // Show first 5 members
     <div key={member._id} className="relative w-10 h-10">
       <Image
-        src={member.image || "/default-avatar.png"}
+        src={member.image ||  "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wCEAAkGBwgHBgkIBwgKCgkLDRYPDQwMDRsUFRAWIB0iIiAdHx8kKDQsJCYxJx8fLT0tMTU3Ojo6Iys/RD84QzQ5OjcBCgoKDQwNGg8PGjclHyU3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3N//AABEIAJQAqgMBIgACEQEDEQH/xAAbAAEAAgMBAQAAAAAAAAAAAAAABgcDBAUBAv/EADgQAAIBAwEFAwkGBwAAAAAAAAABAgMEBREGITFBUWGBkRITIiMyQqGx0RRSU3FywRUkMzRzsvD/xAAWAQEBAQAAAAAAAAAAAAAAAAAAAQL/xAAWEQEBAQAAAAAAAAAAAAAAAAAAARH/2gAMAwEAAhEDEQA/ALSABpkAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAB3mjlspbYuh5yu25P2Ka9qf/AHUhWR2jyF7JqNXzFLlCk9PF8WDVharhqe95UzqVJPWVSo31cmbtlmchZSToXM9F7s35SfcwaswHEwe0VDJtUasVSutPZT3T/S/2O34gAAAAAAAAAAAAAAAAAAAMF7dU7K0q3NZ+hTWr7eiM5E9urzSFvZxb0l6ya+CAjORva2Qu53Nw/SlwjyiuiNYA0gAAPqEpQnGUG1KL1i1xTLD2cyn8Usdamn2iloqi69Jd5XR2NlLv7LmKUdWoVvVy059PiZVYYHMAAAAAAAAAAAAAAAAACBbaScs1o+VKOnxJ6Qbbem45WnPlOktO5sCOgA0gAABnsZON9byXFVY/NGA28TTdXJ2lNc6sfmZVaAAAAAAAAAAAAAAAAAAAEb23s5VrCndRWsqD9PT7r5+JJD4q04Vac6dSKlCacZJ8GmBU4OtncJVxdZyjFztJP0Ki93sfb8zklAADTAkOxdm6+Slctert48esnwXzORj7C4yNwqNtTcpe9L3YLq2WLisfSxllG3o79H5U5c5S5sg3Hx7wAAAAAAAAAAAAAAAAAAAAHkkpRcZKMotaNSW5nGu9l8ZcPWNOVGT50paLwe437zJ2Vj/dXNOD+7rq/BHHr7X2EH6qlXq9yiviBiexlrruu6yX6YmxbbI46lJSqyrVuyUtF8DUe2tPXdY1NP8AKvoZqW2VnJpVbavT7U1ICQW1vRtaSpW9KFOC5QWhlObZ53G3jUaV1GMn7tT0WdIAAAAAAAAAAAAAAAAAAc7N5alirXzk9J1p7qVPX2n9AM2RyNtjqPnbqoop+zFb5SfYiF5Taa9vHKFBu2odIv0n+bOVe3le+uJV7mbnN+CXRdhgAPe9d+r4vXeACoAAoadTo43NX2N0VCq5Utd9Ko9Yv6HOBBYuFztrlEoL1VxzpTfH8up1ipYSlCSlCTjKL1UluaZONmdoPt+lpeNK5S9CXDzi+pFSIAAAAAAAAAAAABhurila29SvXl5NOEXJsrTKX9bJXdS5uN2u6MeUVyRItt79uVLHwlu3VKunXkv37yJoAACxKAAoAAAAAB9U5zpzU6cnGcWpJriu0+QRYsjZ/KLKWCqTeleD8mrHt5PvOmVzszf/AMPylNylpSq+rnrwWr3PuLGIAAAAAAAAB5u58D01cnVdDHXVVcY0ZNeAFcZS5d5kbm5b/qVG12LgvgkaoQLEoACgAAAAAAAAAAQa1WhZ2GuneYy2ryes5QSl+a3MrEnWxNVzxEofh1Wl3rUipCACAAAAAAHO2hemDvNPwpAAVqACxAAFAAAAAAAAAAACZ7Bv+SuVy86v9T0Eok4AI0AAI//Z"}
         alt="Member Avatar"
         width={40}
         height={40}
@@ -296,7 +304,7 @@ const CommunityDetails = ({ params }: { params: Promise<{ id: string }> }) => {
 
              
               {post.image && (
-                <div className="mt-4">
+                <div className="mt-7 ">
                   {post.image.endsWith(".mp4") || post.image.endsWith(".webm") ? (
                     <video controls className="w-full h-auto">
                       <source src={post.image} type="video/mp4" />
@@ -306,9 +314,9 @@ const CommunityDetails = ({ params }: { params: Promise<{ id: string }> }) => {
                     <Image
                       src={post.image}
                       alt="Post Image"
-                      width={500}
-                      height={300}
-                      className="w-full h-auto object-cover"
+                      width={900}
+                      height={900}
+                      className="w-[90%] h-auto rounded-xl"
                     />
                   )}
                 </div>

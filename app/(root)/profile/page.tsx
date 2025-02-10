@@ -4,6 +4,8 @@ import { useEffect, useState, useCallback } from "react";
 import { useSession } from "next-auth/react";
 import Image from "next/image";
 import { useUserId } from "@/hooks/useUserId";
+import toast, { Toaster } from "react-hot-toast";
+import ProfileSkeleton from "@/components/profileskeleton";
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -14,10 +16,16 @@ export default function ProfilePage() {
   const [image, setImage] = useState<File | null>(null);
   const [followers, setFollowers] = useState<number>(0);
   const [following, setFollowing] = useState<number>(0);
+  const [loading, setLoading] = useState(false);
+  const [mounted, setMounted] = useState(false);
 
-  // ✅ Fetch user data
+  useEffect(() => {
+    setMounted(true); // Mark the component as mounted
+  }, []);
+
   const fetchUserData = useCallback(async () => {
     if (!userId) return;
+    setLoading(true); // Start loading immediately
     try {
       const response = await fetch(`/api/profile?userId=${userId}`);
       if (!response.ok) throw new Error("Failed to fetch user data");
@@ -28,6 +36,8 @@ export default function ProfilePage() {
       setFollowing(data.user.following);
     } catch (error) {
       console.error("Error fetching user data:", error);
+    } finally {
+      setLoading(false); // Stop loading after data is fetched or an error occurs
     }
   }, [userId]);
 
@@ -39,23 +49,24 @@ export default function ProfilePage() {
     fetchUserData();
   }, [status, session, fetchUserData, router]);
 
-  if (status === "loading") {
-    return <p className="text-center text-gray-700">Loading...</p>;
+  if (!mounted) {
+    return null; // Prevent rendering anything until the component is mounted
   }
 
-  // ✅ Handle profile update
+  if (status === "loading" || loading) {
+    return <ProfileSkeleton />;
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!userId) {
       alert("User ID is missing. Please log in again.");
       return;
     }
-
     const formData = new FormData();
     formData.append("userId", userId);
     formData.append("name", name);
     if (image) formData.append("image", image);
-
     try {
       const response = await fetch("/api/profile", {
         method: "POST",
@@ -63,24 +74,23 @@ export default function ProfilePage() {
       });
       const data = await response.json();
       if (data.success) {
-        alert("Profile updated successfully!");
+        toast.success("Profile updated successfully!");
         setImageUrl(data.user.image);
       } else {
-        alert(data.message || "Failed to update profile");
+        toast.error(data.message);
       }
     } catch (error) {
       console.error(error);
-      alert("An error occurred while updating your profile.");
+      toast.error("Failed to update profile");
     }
   };
 
   return (
-    <div className="flex flex-col items-center sm:pl-[20em] justify-center max-md:w-[100vw] h-screen w-full">
+    <div className="flex flex-col  items-center sm:pl-[10em] justify-center max-md:w-[100vw] h-screen w-full">
       <h1 className="text-4xl text-gray-600 sm:text-5xl font-bold mb-6 text-center">
         Hello <strong className="text-violet-600">{name || "Guest"} 👋</strong>
       </h1>
 
-      {/* ✅ Profile Picture & Stats */}
       <div className="flex items-start gap-4">
         <div className="mb-6">
           <Image
@@ -103,7 +113,6 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      {/* ✅ Update Profile Form */}
       <form onSubmit={handleSubmit} className="p-6 rounded-lg shadow-md w-full max-w-md">
         <div className="mb-4">
           <label className="block text-gray-400">Name</label>
@@ -115,7 +124,6 @@ export default function ProfilePage() {
             required
           />
         </div>
-
         <div className="mb-4">
           <label className="block text-gray-400">Email</label>
           <input
@@ -125,7 +133,6 @@ export default function ProfilePage() {
             className="w-full p-4 bg-[#C3C3E5] font-serif font-bold border rounded text-[#443266] cursor-not-allowed"
           />
         </div>
-
         <div className="mb-4">
           <label className="block text-gray-400">Profile Picture</label>
           <input
@@ -135,11 +142,14 @@ export default function ProfilePage() {
             className="w-full p-3 border border-gray-700 bg-transparent text-white rounded-xl"
           />
         </div>
-
-        <button type="submit" className="w-full bg-violet-600 text-white py-2 rounded-xl hover:bg-violet-700 transition-colors">
+        <button
+          type="submit"
+          className="w-full bg-violet-600 text-white p-5 rounded-xl hover:bg-violet-700 transition-colors"
+        >
           Update Profile
         </button>
       </form>
+      <Toaster />
     </div>
   );
 }

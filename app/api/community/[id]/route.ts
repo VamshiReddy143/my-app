@@ -75,6 +75,9 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
     const { id } = params;
 
 
+
+    const { default: Community } = await import("@/models/community");
+    const {default:comments} = await import("@/models/comment");
     const community = await Community.findById(id)
     .populate({
       path: "posts",

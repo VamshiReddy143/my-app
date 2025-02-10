@@ -35,10 +35,15 @@ export async function POST(request: NextRequest) {
     const description = formData.get("description")?.toString();
     const imageFile = formData.get("image");
     const tagsString = formData.get("tags")?.toString();
-    const communityId = formData.get("community");
+    const communityId = formData.get("community")?.toString();
 
-    if (!title || !description  || !communityId) {
-      return NextResponse.json({ success: false, message: "All fields are required" }, { status: 400 });
+    const isCommunityPost = Boolean(communityId && communityId !== "null")
+
+    if (!title || !description || (isCommunityPost && !communityId)) {
+      return NextResponse.json(
+        { success: false, message: isCommunityPost ? "Community is required" : "Title and description are required" },
+        { status: 400 }
+      );
     }
 
 
@@ -71,7 +76,7 @@ export async function POST(request: NextRequest) {
       image: secureUrl,
       user: userId,
       tags,
-      community: communityId,
+      community: isCommunityPost ? communityId : null,
     });
 
     return NextResponse.json({ success: true, post: newPost }, { status: 201 });

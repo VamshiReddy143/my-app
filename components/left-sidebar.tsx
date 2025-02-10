@@ -11,7 +11,7 @@ const Paths = [
   { name: "Search", url: "/search", icon: Search },
   { name: "Post", url: "/posts/createpost", icon: Plus },
   { name: "Profile", url: "/profile", icon: Podcast },
-  { name: "Create Community", url: "/createCommunity", icon: Plus },
+  { name: "Create Community", url: "/community/createcommunity", icon: Plus },
 ];
 
 const Leftsidebar = () => {
@@ -25,7 +25,7 @@ const Leftsidebar = () => {
 
   return (
     <>
-      <nav className="h-screen flex-col hidden sm:flex mt-8">
+      <nav className="h-screen  top-0 left-0 flex-col hidden p-4 sm:flex mt-8">
         {Paths.map((path) => (
           <Link href={path.url} key={path.name} title={path.name} aria-label={path.name}>
             <div

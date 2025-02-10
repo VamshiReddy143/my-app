@@ -1,16 +1,23 @@
 "use client"
 
-import React, { useCallback, useEffect, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { useSession } from 'next-auth/react';
 import Image from 'next/image';
+import {useRouter }from 'next/navigation';
 import Link from 'next/link';
 import { toast, Toaster } from 'react-hot-toast';
 import { useDeletePost } from '@/components/PostActions';
 import { LikeOrDislikePost } from '@/components/PostActions';
 import { Sharepost } from '@/components/PostActions';
 import { useAddComment } from "@/hooks/useAddComment";
+import Loading from '@/components/loading';
+import Search from "@/components/search"
+
+
 
 import { useUserId } from "@/hooks/useUserId";
+
+
 
 
 
@@ -40,7 +47,7 @@ interface PostsData {
   community?: {
     _id: string;
     name: string;
-  }; 
+  };
 }
 
 const Home = () => {
@@ -48,9 +55,10 @@ const Home = () => {
   const [posts, setPosts] = useState<PostsData[]>([])
   const { data: session, status } = useSession()
   const [openComments, setOpenComments] = useState<{ [key: string]: boolean }>({});
+  const [loading, setLoading] = useState(false);
 
 
-  console.log("Posts:", posts)
+  const Router = useRouter();
 
   const colors = [
     "bg-red-200", "bg-green-200", "bg-blue-200", "bg-yellow-200",
@@ -80,8 +88,14 @@ const Home = () => {
   }
 
   useEffect(() => {
-    if (status !== "authenticated") return
+    if (status === "unauthenticated") {
+      Router.push("/login");
+      return;
+    }
+   
     const fetchPosts = async () => {
+      setLoading(true)
+   
       try {
         const response = await fetch("/api/posts");
         if (!response.ok) throw new Error("Failed to fetch posts");
@@ -92,18 +106,33 @@ const Home = () => {
       } catch (error) {
         toast.error("Error fetching posts");
         console.error(error);
+      }finally{
+        setLoading(false)
       }
     }
     fetchPosts()
-  }, [status])
+  }, [status,session,Router])
+
+
+
+
+
+  if (loading) {
+    return (
+      <Loading/>
+    );
+  }
 
 
   return (
-    <div className="mx-auto container mt-10 px-4 sm:pr-[20em]">
+    <div className="mx-auto container   sm:pr-[40em]">
+      <div>
+        <Search/>
+      </div>
       {posts && posts.length > 0 ? (
         posts.map((post) => (
           <div key={post._id}>
-            <div className="flex items-center gap-2">
+            <div className="flex mt-10 items-center gap-2">
               <Image
                 src={post.user?.image || "https://cdn.vectorstock.com/i/1000v/96/80/blank-profile-image-placeholder-icon-vector-50719680.jpg"}
                 width={40}
@@ -114,36 +143,36 @@ const Home = () => {
 
               <div className="text-gray-400 flex items-center gap-3">
                 <Link href={`/profile/${post.user?._id}`}>
-                  <h1 className="text-white text-lg font-bold">{post.user?.name}</h1>
+                  <h1 className="text-white sm:text-lg text-sm font-bold">{post.user?.name}</h1>
                 </Link>
 
                 <p>•</p>
-                <strong className="text-gray-600">{getTimeAgo(post.createdAt)}</strong>
+                <strong className="text-gray-600 text-sm">{getTimeAgo(post.createdAt)}</strong>
                 {userId === post.user?._id && (
                   <button onClick={() => deletePost(post._id, setPosts)}
                     className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-700 transition-colors"
                   >
                     Delete
                   </button>
-                  
+
                 )}
-                
+
               </div>
 
             </div>
             <h1 className="text-white text-xl font-bold mt-4 sm:text-2xl">{post.title}</h1>
-          
+
             <p className="text-gray-400 mt-2 line-clamp-3 sm:line-clamp-4">{post.description}</p>
             <Link href={`/community/${post?.community?._id}`} passHref>
-  {post?.community ? (
-    <p className={`text-sm font-bold mt-3 text-gray-900 p-2 rounded-full w-fit 
+              {post?.community ? (
+                <p className={`text-sm font-bold mt-3 text-gray-900 p-2 rounded-full w-fit 
       ${colors[Math.floor(Math.random() * colors.length)]}`}>
-      {post.community.name}
-    </p>
-  ) : (
-    <p className="text-gray-500 text-sm">No Community</p> // ✅ Show fallback text
-  )}
-</Link>
+                  {post.community.name}
+                </p>
+              ) : (
+                <p className="text-gray-500 text-sm">{""}</p> // ✅ Show fallback text
+              )}
+            </Link>
 
 
             {post.tags && post.tags?.length > 0 && (
@@ -162,7 +191,7 @@ const Home = () => {
                 <video
                   src={post.image}
                   controls
-                  className="mt-4 rounded-3xl w-full h-auto max-h-[400px] object-cover"
+                  className="mt-4 rounded-3xl  h-auto w-full max-h-[400px] object-cover"
                 />
               ) : (
                 <Image
@@ -171,17 +200,17 @@ const Home = () => {
                   height={900}
                   loading="lazy"
                   alt="Post image"
-                  className="mt-4 rounded-3xl w-full  object-contain  max-h-[400px]"
+                  className=" mt-10 max-w-[100%] h-auto rounded-xl"
                 />
               ))}
 
 
             <div className="flex items-center gap-2 text-white mt-4">
-              <button onClick={() => likeOrDislikePost(post._id, "like", setPosts)} className={`bg-gray-600 px-4 py-2 rounded-full flex items-center gap-1 hover:bg-violet-600 transition-colors ${session?.user?.id && post.likes?.includes(session?.user?.id) ? "bg-violet-600" : ""}`}>
+              <button onClick={() => likeOrDislikePost(post._id, "like", setPosts)} className={`bg-gray-600 px-4 py-2 rounded-full flex items-center gap-1 hover:bg-violet-600 transition-colors ${userId && post.likes?.includes(userId) ? "bg-violet-600" : ""}`}>
                 🢁 {post.likes.length}
               </button>
 
-              <button onClick={() => likeOrDislikePost(post._id, "dislike", setPosts)} className={`bg-gray-600 px-4 py-2 rounded-full flex items-center gap-1 hover:bg-violet-600 transition-colors ${session?.user?.id && post.likes?.includes(session?.user?.id) ? "bg-violet-600" : ""}`}>
+              <button onClick={() => likeOrDislikePost(post._id, "dislike", setPosts)} className={`bg-gray-600 px-4 py-2 rounded-full flex items-center gap-1 hover:bg-violet-600 transition-colors ${userId && post.dislikes?.includes(userId) ? "bg-violet-600" : ""}`}>
                 🢃 {post.dislikes?.length}
               </button>
 

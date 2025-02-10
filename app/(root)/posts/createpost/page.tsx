@@ -3,7 +3,7 @@
 import React, { useState, useCallback, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useDropzone } from "react-dropzone";
-import { Upload } from "lucide-react";
+import { Search, Upload } from "lucide-react";
 import Image from "next/image";
 import { Toaster, toast } from "react-hot-toast";
 import axios from "axios";
@@ -16,10 +16,11 @@ interface PostData {
 }
 
 interface Props {
-  communities: any[];
+  communities: [];
 }
 
-const CreatePost = ({ communities }: Props) => {
+const CreatePost = ({ communities, postType = "normal" }: Props & { postType?: "community" | "normal" }) => {
+
   const [activeTab, setActiveTab] = useState<"text" | "media" | "link">("text");
   const [imageUrl, setImageUrl] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
@@ -33,7 +34,7 @@ const CreatePost = ({ communities }: Props) => {
 
   const [selectedCommunity, setSelectedCommunity] = useState<string | null>(null);
 
- 
+
 
   //to show image when it is selected
   useEffect(() => {
@@ -53,11 +54,11 @@ const CreatePost = ({ communities }: Props) => {
   }, []);
 
 
-// Handle search
-   const handleSearch = async (query: string) => {
+  // Handle search
+  const handleSearch = async (query: string) => {
     setSearchQuery(query);
     if (!query) {
-      setSearchResults([]); // Clear results if query is empty
+      setSearchResults([]);
       return;
     }
 
@@ -92,26 +93,42 @@ const CreatePost = ({ communities }: Props) => {
 
   const handleSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!postData.title || !postData.description  || !selectedCommunity) {
+    if (!postData.title || !postData.description) {
       toast.error("All fields are required");
       return;
     }
-  
+
+    if (!postData.title || !postData.description) {
+      toast.error("Title and description are required");
+      return;
+    }
+
+    const isCommunityPost = postType === "community";
+
+    if (isCommunityPost && !selectedCommunity) {
+      toast.error("Please select a community for this post.");
+      return;
+    }
+
+
+
     const formData = new FormData();
     formData.append("title", postData.title);
     formData.append("description", postData.description);
-    formData.append("community", selectedCommunity);
-    
+    if (isCommunityPost) {
+      formData.append("community", selectedCommunity!);
+    }
+
     if (imageUrl) {
       formData.append("image", imageUrl);
     }
-  
+
 
     formData.append("tags", tags.join(","));
-  
+
     setLoading(true);
     setProgress(0);
-  
+
     try {
       const response = await axios.post("/api/posts", formData, {
         headers: { "Content-Type": "multipart/form-data" },
@@ -121,7 +138,7 @@ const CreatePost = ({ communities }: Props) => {
           }
         },
       });
-  
+
       if (response.data.success) {
         setSelectedCommunity(communities?.length > 0 ? communities[0]._id : null);
         toast.success("Post created successfully");
@@ -138,8 +155,8 @@ const CreatePost = ({ communities }: Props) => {
     } finally {
       setLoading(false);
     }
-  }, [postData, imageUrl, tags, selectedCommunity, communities]);
-  
+  }, [postData, imageUrl, tags, selectedCommunity, postType, communities]);
+
 
   // File drop handler
   const onDrop = useCallback((acceptedFiles: File[]) => {
@@ -166,17 +183,27 @@ const CreatePost = ({ communities }: Props) => {
         <meta name="description" content="Create a new post with text, media, or links." />
       </Head>
 
-      <div className="mx-auto p-5 mt-10 container">
-        <form onSubmit={handleSubmit}>
+      <div className=" p-5 mt-10 ">
+        <form onSubmit={handleSubmit} >
           <h1 className="text-gray-400 text-2xl sm:text-3xl font-bold">Create Post</h1>
 
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => handleSearch(e.target.value)}
-            className="focus:outline-none text-black px-10 p-3 rounded-full w-full sm:w-[30em]"
-            placeholder="Select a community"
-          />
+          {postType === "community" && (
+            <div className="">
+              <div className="absolute mt-8 ml-2 text-black flex items-center">
+                <Search />
+              </div>
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  handleSearch(e.target.value);
+                }}
+                className="focus:outline-none text-black sm:px-10 px-[12em] p-3 mt-5 rounded-full w-full sm:w-[30em]"
+                placeholder="Select a community"
+              />
+            </div>
+          )}
 
           {loading && <p>Searching...</p>}
           {searchResults.length > 0 && (
@@ -191,13 +218,13 @@ const CreatePost = ({ communities }: Props) => {
                     <Image src={community.image} alt={community.name} height={50} width={50} className="w-8 h-8 rounded-full" />
                   )}
                   <span className="text-white">{community.name}</span>
-               
-                 
+
+
                 </li>
-                
+
 
               ))}
-               
+
             </ul>
           )}
 
@@ -205,20 +232,20 @@ const CreatePost = ({ communities }: Props) => {
           {selectedCommunity && (
             <div className="text-white mt-10  flex items-center gap-4">
               <strong className="text-xl font-bold ">Selected Community:</strong>
-          <div className="flex items-center gap-2 bg-gray-800 p-4 rounded-full cursor-pointer">
-          <span>
-                {communities?.find((c) => c._id === selectedCommunity)?.name || "Unknown"}
-              </span>
-              {communities?.find((c) => c._id === selectedCommunity)?.image && (
-                <Image
-                  src={communities.find((c) => c._id === selectedCommunity)?.image || "/default-community.png"}
-                  alt="Community Image"
-                  height={500}
-                  width={500}
-                  className="rounded-full h-10 w-10 object-cover"
-                />
-              )}
-          </div>
+              <div className="flex items-center gap-2 bg-gray-800 p-4 rounded-full cursor-pointer">
+                <span>
+                  {communities?.find((c) => c._id === selectedCommunity)?.name || "Unknown"}
+                </span>
+                {communities?.find((c) => c._id === selectedCommunity)?.image && (
+                  <Image
+                    src={communities.find((c) => c._id === selectedCommunity)?.image || "/default-community.png"}
+                    alt="Community Image"
+                    height={500}
+                    width={500}
+                    className="rounded-full h-10 w-10 object-cover"
+                  />
+                )}
+              </div>
             </div>
           )}
 
@@ -246,7 +273,7 @@ const CreatePost = ({ communities }: Props) => {
               onChange={handleChange}
               id="title"
               placeholder="Enter title"
-              className="peer bg-transparent border border-gray-400 text-white px-4 sm:px-10 p-4 sm:p-6 rounded-lg w-full sm:w-[50em] focus:outline-none"
+              className=" focus:outline-none bg-transparent border-[1px] border-gray-400 text-white px-4  p-4 sm:p-6 rounded-lg w-full  sm:w-[50em]"
             />
           </div>
 
@@ -258,7 +285,7 @@ const CreatePost = ({ communities }: Props) => {
               placeholder="Enter tags, separated by commas"
               value={tags.join(", ")}
               onChange={handleTagChange}
-              className="border p-2 text-white focus:outline-none border-gray-500 bg-transparent rounded-lg w-full sm:w-[50em]"
+              className="border p-4 text-white focus:outline-none border-gray-500 bg-transparent rounded-lg w-full sm:w-[50em]"
             />
           </div>
 
@@ -278,23 +305,47 @@ const CreatePost = ({ communities }: Props) => {
             )}
 
             {activeTab === "media" && (
-              <motion.div {...getRootProps()} className="border p-4 flex flex-col items-center cursor-pointer">
-                <Upload fill="white" />
-                <input {...getInputProps()} className="hidden" />
+              <div {...getRootProps()} className="border-[1px]  border-gray-500 p-4 flex flex-col items-center justify-center rounded-lg h-fit  cursor-pointer">
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ duration: 0.3 }}
+                  className="flex flex-col items-center"
+                >
+                  <Upload size={40} fill="white" className="bg-gray-600 p-2 flex justify-center rounded-full"/>
+                  <input {...getInputProps()} className="hidden" placeholder="Upload Image"/>
 
-                {imagePreview && (
-                  <div className="mt-4">
-                    {imageUrl?.type.startsWith("image/") ? (
-                      <Image src={imagePreview} alt="Preview" height={200} width={200} className="w-32 h-32 object-cover rounded-lg" />
-                    ) : (
-                      <video src={imagePreview} controls className="w-64 h-36 object-cover rounded-lg" />
-                    )}
-                    <button onClick={() => { setImageUrl(null); setImagePreview(null); }} className="text-red-500 text-sm mt-2">
-                      Remove File
-                    </button>
-                  </div>
-                )}
-              </motion.div>
+                  {imagePreview && (
+                    <div className="mt-4 flex justify-center">
+                      {imageUrl?.type.startsWith("image/") ? (
+                        <Image
+                          src={imagePreview}
+                          alt="Preview"
+                          height={800}
+                          width={800}
+                          className="max-w-[150px] max-h-[150px] object-cover  rounded-lg"
+                        />
+                      ) : (
+                        <video
+                          src={imagePreview}
+                          controls
+                          className="max-w-[200px] max-h-[150px] object-cover rounded-lg"
+                        />
+                      )}
+                    
+                    <button
+                        onClick={() => { setImageUrl(null); setImagePreview(null); }}
+                        className="text-red-500 text-sm mt-2 ml-2"
+                      >
+                        Remove file
+                        
+                      </button>
+                    
+                    </div>
+                  )}
+
+                </motion.div>
+              </div>
             )}
           </div>
 

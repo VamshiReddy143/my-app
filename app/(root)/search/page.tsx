@@ -61,7 +61,7 @@ const SearchPage = () => {
   }, [debouncedQuery, fetchResults]);
 
   return (
-    <div className="container mx-auto mt-10 px-4">
+    <div className="container mx-auto mt-[5em] px-4">
       {/* Search Input */}
       <div className="relative w-[600px] bg-gray-100 rounded-2xl shadow-md p-1.5 transition-all duration-150 ease-in-out hover:scale-105 hover:shadow-lg">
         <div className="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none">
@@ -82,11 +82,11 @@ const SearchPage = () => {
 
       {/* Users Section */}
       <h2 className="text-white text-2xl mt-10 font-semibold mb-3">Users</h2>
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 gap-4">
         {users.length > 0 ? (
           users.map((user) => (
             <Link key={user._id} href={`/profile/${user._id}`} className="flex items-center gap-3 bg-gray-900 p-2 rounded-xl">
-              <Image src={user.image || "/default-avatar.png"} width={50} height={50} className="rounded-full h-[60px] w-[60px] object-cover" alt="User Avatar" />
+              <Image src={user.image || "https://cdn.vectorstock.com/i/1000v/96/80/blank-profile-image-placeholder-icon-vector-50719680.jpg"} width={50} height={50} className="rounded-full h-[60px] w-[60px] object-cover" alt="User Avatar" />
               <span className="text-white">{user.name}</span>
             </Link>
           ))
@@ -101,7 +101,7 @@ const SearchPage = () => {
         {communities.length > 0 ? (
           communities.map((community) => (
             <Link key={community._id} href={`/community/${community._id}`} className="flex items-center gap-3 bg-gray-900 p-3 rounded-xl">
-              <Image src={community.image || "/default-avatar.png"} width={50} height={50} className="rounded-full" alt="Community Avatar" />
+              <Image src={community.image || "https://cdn.vectorstock.com/i/1000v/96/80/blank-profile-image-placeholder-icon-vector-50719680.jpg"} width={50} height={50} className="rounded-full" alt="Community Avatar" />
               <span className="text-white">{community.name}</span>
             </Link>
           ))

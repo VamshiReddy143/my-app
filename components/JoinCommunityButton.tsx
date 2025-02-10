@@ -8,12 +8,12 @@ interface Props {
 }
 
 const JoinCommunityButton = ({ communityId, onMemberChange }: Props) => {
-  const userId = useUserId(); // ✅ Get validated user ID
+  const userId = useUserId(); 
   const [isMember, setIsMember] = useState<boolean | null>(null);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (!userId) return; // ✅ Wait for userId to load
+    if (!userId || !communityId) return; // ✅ Prevent running before userId is available
 
     const fetchMembershipStatus = async () => {
       try {
@@ -29,7 +29,7 @@ const JoinCommunityButton = ({ communityId, onMemberChange }: Props) => {
     };
 
     fetchMembershipStatus();
-  }, [communityId, userId]); // ✅ Depend on `userId`, not `session`
+  }, [communityId, userId]);
 
   const handleJoinLeave = async () => {
     if (!userId) {
@@ -42,13 +42,13 @@ const JoinCommunityButton = ({ communityId, onMemberChange }: Props) => {
       const response = await fetch(`/api/community/${communityId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId }), // ✅ Send userId in request
+        body: JSON.stringify({ userId }),
       });
 
       const data = await response.json();
       if (data.success) {
-        setIsMember(data.joined); // ✅ Update button state
-        onMemberChange(communityId, data.joined);
+        setIsMember(data.joined);
+        onMemberChange(communityId, data.joined); // ✅ Sync state with parent
       } else {
         alert(data.message);
       }
@@ -63,7 +63,7 @@ const JoinCommunityButton = ({ communityId, onMemberChange }: Props) => {
     <button
       onClick={handleJoinLeave}
       className={`py-2 px-4 rounded-full text-sm transition ${
-        isMember ? "bg-red-600 hover:bg-red-700" : "bg-violet-600 hover:bg-violet-700"
+        isMember ? "bg-gray-100 text-violet-600 font-bold " : "bg-violet-600 hover:bg-violet-700"
       }`}
       disabled={loading}
     >

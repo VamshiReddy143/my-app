@@ -33,7 +33,7 @@ const CreateCommunityForm = () => {
   };
 
   return (
-<div>
+<div className="mt-[5em] pl-2">
   <h1 className="text-3xl text-gray-700 font-bold mb-6">CREATE A COMMUNITY</h1>
 <form onSubmit={handleSubmit} className="space-y-4">
       <input
@@ -41,14 +41,14 @@ const CreateCommunityForm = () => {
         placeholder="Community Name"
         value={name}
         onChange={(e) => setName(e.target.value)}
-        className="border-[1px] border-gray-700 text-white bg-transparent p-4 rounded-xl w-full"
+        className="border-[1px] focus:outline-none border-gray-700 text-white bg-transparent p-4 rounded-xl w-full"
         required
       />
       <textarea
         placeholder="Description"
         value={description}
         onChange={(e) => setDescription(e.target.value)}
-       className="border-[1px] border-gray-700 bg-transparent text-white p-4 rounded-xl w-full"
+       className="border-[1px] focus:outline-none border-gray-700 bg-transparent text-white p-4 rounded-xl w-full"
         required
       />
       <input
@@ -56,7 +56,7 @@ const CreateCommunityForm = () => {
         placeholder="Image URL (optional)"
         value={image}
         onChange={(e) => setImage(e.target.value)}
-        className="border-[1px] border-gray-700 bg-transparent p-4 rounded-xl text-white w-full"
+        className="border-[1px] focus:outline-none border-gray-700 bg-transparent p-4 rounded-xl text-white w-full"
       />
       <button type="submit" className="bg-violet-600 text-white px-4 py-2 rounded-xl">
         Create Community
