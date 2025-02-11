@@ -7,6 +7,7 @@ import { useUserId } from "@/hooks/useUserId";
 import { LikeOrDislikePost } from "@/components/PostActions";
 
 import Loading from "@/components/loading";
+import { set } from "mongoose";
 
 
 
@@ -52,6 +53,7 @@ const ProfilePage = () => {
   const [followingCount, setFollowingCount] = useState(0);
   const [loading, setLoading] = useState(false);
 
+
   const myId = useUserId();
   const likeOrDislikePost = LikeOrDislikePost();
 
@@ -60,6 +62,7 @@ const ProfilePage = () => {
   const fetchUserProfile = useCallback(async () => {
     if (!userId || !session?.user?.id) return;
     setLoading(true);
+   
 
     try {
       const response = await fetch(`/api/users/${userId}`);

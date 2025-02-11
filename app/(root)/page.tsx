@@ -125,7 +125,7 @@ const Home = () => {
 
 
   return (
-    <div className="mx-auto container   sm:pr-[40em]">
+    <div className="mx-auto container sm:mt-0 mt-20 sm:pr-[40em]">
       <div>
         <Search/>
       </div>
@@ -170,7 +170,7 @@ const Home = () => {
                   {post.community.name}
                 </p>
               ) : (
-                <p className="text-gray-500 text-sm">{""}</p> // ✅ Show fallback text
+                <p className="text-gray-500 text-sm">{""}</p>
               )}
             </Link>
 

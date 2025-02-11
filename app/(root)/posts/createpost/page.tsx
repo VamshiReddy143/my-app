@@ -205,7 +205,7 @@ const CreatePost = ({ communities, postType = "normal" }: Props & { postType?: "
             </div>
           )}
 
-          {loading && <p>Searching...</p>}
+          {loading && <p>loading...</p>}
           {searchResults.length > 0 && (
             <ul className="border border-gray-500 rounded-xl mt-2 p-3  max-h-48 overflow-y-auto">
               {searchResults.map((community) => (
